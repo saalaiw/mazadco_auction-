@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'package:awesome_notifications/awesome_notifications.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:works/crud.dart';
+import 'package:works/linkapi.dart';
 
 import 'admin.dart';
 import 'NotificationHelper.dart';
 import 'create_account_1.dart';
- import 'crud.dart';
 import 'landing_page.dart';
-import 'linkapi.dart';
 import 'start.dart'; // MazadcoApp
 
 // Global session to store user ID
@@ -20,20 +20,16 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Initialize Awesome Notifications with just the 'chat_channel'
-  await AwesomeNotifications().initialize(
-    null,
-    [
-      NotificationChannel(
-        channelKey: 'chat_channel',
-        channelName: 'Chat Notifications',
-        channelDescription: 'Notifications for chat messages',
-        defaultColor: Color(0xFF9D50DD),
-        ledColor: Colors.white,
-        importance: NotificationImportance.High,
-      )
-    ],
-    debug: true,
-  );
+  await AwesomeNotifications().initialize(null, [
+    NotificationChannel(
+      channelKey: 'chat_channel',
+      channelName: 'Chat Notifications',
+      channelDescription: 'Notifications for chat messages',
+      defaultColor: Color(0xFF9D50DD),
+      ledColor: Colors.white,
+      importance: NotificationImportance.High,
+    ),
+  ], debug: true);
 
   // Optional: Ask for notification permission
   bool isAllowed = await AwesomeNotifications().isNotificationAllowed();
@@ -43,113 +39,7 @@ Future<void> main() async {
 
   runApp(const MazadcoLoginApp());
 }
-Future<void> evaluateRisk(int userId) async {
-  Crud crud = Crud();
 
-  var result = await crud.getRequest("$linkRiskEvaluator?user_id=$userId");
-  print("Risk API response************: $result");
-
-  if (result != null && result is Map && result.isNotEmpty) {
-    // استخراج البيانات فقط دون استخدام setState (لأنه خارج StatefulWidget)
-    var riskStatus = result['risk_status'] ?? 'Unknown';
-    var riskData = {
-      'account_authenticity': result['account_authenticity'] ?? 0.0,
-      'bidding_score': result['bidding_score'] ?? 0.0,
-      'transaction_score': result['transaction_score'] ?? 0.0,
-      'delivery_score': result['delivery_score'] ?? 0.0,
-      'fraud_score': result['fraud_score'] ?? 0.0,
-      'risk_level': riskStatus,
-    };
-    var riskImagePath = _getImageForRisk(riskStatus);
-
-    // يمكنك طباعة أو استخدام البيانات هنا حسب الحاجة
-    print("Risk Data: $riskData");
-    print("Risk Image Path: $riskImagePath");
-  }
-}
-
-
-// Helper function to map risk status to an image
-String _getImageForRisk(String riskStatus) {
-  // Example mapping; you can update this logic as per the risk levels
-  if (riskStatus == 'High') {
-    return 'images/high_risk.png';
-  } else if (riskStatus == 'Low') {
-    return 'images/low_risk.png';
-  }
-  return 'images/unknown_risk.png';
-}
-/*class _LoginPageState extends State<LoginPage> {
-  final TextEditingController usernameController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  bool obscurePassword = true;
-  String errorMessage = '';
-  bool isLoading = false;
-
-  final String linkLogIn = 'http://10.0.2.2/user_profile/login.php'; // Replace this with your actual API
-
-  void _handleLogin() async {
-    String username = usernameController.text.trim();
-    String password = passwordController.text.trim();
-
-    setState(() {
-      errorMessage = '';
-    });
-
-    if (username.isEmpty || password.isEmpty) {
-      setState(() {
-        errorMessage = 'Please enter both username and password';
-      });
-      return;
-    }
-
-    setState(() {
-      isLoading = true;
-    });
-
-    try {
-      final response = await http.post(
-        Uri.parse(linkLogIn),
-        body: {'username': username, 'password': password},
-      );
-
-      print('Response body: ${response.body}');
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        if (data['success'] == true) {
-          int userId = int.parse(data['user_id'].toString());
-          Session.userId = userId;
-
-          // ✅ Call evaluateRisk after successful login
-          await evaluateRisk(userId);
-
-          // Then navigate to the next page or show dashboard
-          // Navigator.push(...);
-
-        } else {
-          setState(() {
-            errorMessage = data['message'] ?? 'Login failed';
-          });
-        }
-      } else {
-        setState(() {
-          errorMessage = 'Server error: ${response.statusCode}';
-        });
-      }
-    } catch (e) {
-      print("Login error: $e");
-      setState(() {
-        errorMessage = 'An error occurred during login';
-      });
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-*/
 class MazadcoLoginApp extends StatelessWidget {
   const MazadcoLoginApp({super.key});
 
@@ -164,7 +54,10 @@ class MazadcoLoginApp extends StatelessWidget {
         inputDecorationTheme: InputDecorationTheme(
           filled: true,
           fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+          contentPadding: const EdgeInsets.symmetric(
+            vertical: 16,
+            horizontal: 20,
+          ),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
             borderSide: BorderSide.none,
@@ -184,6 +77,7 @@ class MazadcoLoginApp extends StatelessWidget {
   }
 }
 
+// ordin
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -197,8 +91,10 @@ class _LoginPageState extends State<LoginPage> {
   bool obscurePassword = true;
   String errorMessage = '';
   bool isLoading = false;
+  bool isInputValid = true;
 
-  final String linkLogIn = 'http://10.0.2.2/user_profile/login.php'; // Replace this with your actual API
+  final String linkLogIn =
+      'http://localhost/works/user_profile/login.php'; // Replace this with your actual API
 
   void _handleLogin() async {
     String username = usernameController.text.trim();
@@ -243,12 +139,32 @@ class _LoginPageState extends State<LoginPage> {
             MaterialPageRoute(builder: (context) => AdminDashboardApp()),
           );
         } else {
+          await evaluateRisk(Session.userId!);
+
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
               builder: (context) => MazadcoApp(ipAddress: Session.userId!),
             ),
           );
+        }
+
+        if (Session.userId != 0) {
+          // Perform risk evaluation after login
+          // await evaluateRisk(Session.userId!);
+
+          // Navigate to the landing page
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MazadcoApp(ipAddress: Session.userId!),
+            ),
+          );
+        } else {
+          setState(() {
+            errorMessage = 'Invalid user ID';
+            isInputValid = false;
+          });
         }
       } else {
         setState(() {
@@ -326,7 +242,10 @@ class _LoginPageState extends State<LoginPage> {
                           controller: usernameController,
                           decoration: const InputDecoration(
                             labelText: 'Username',
-                            prefixIcon: Icon(Icons.person_outline, color: Colors.grey),
+                            prefixIcon: Icon(
+                              Icons.person_outline,
+                              color: Colors.grey,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 20),
@@ -336,10 +255,15 @@ class _LoginPageState extends State<LoginPage> {
                           obscureText: obscurePassword,
                           decoration: InputDecoration(
                             labelText: 'Password',
-                            prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
+                            prefixIcon: const Icon(
+                              Icons.lock_outline,
+                              color: Colors.grey,
+                            ),
                             suffixIcon: IconButton(
                               icon: Icon(
-                                obscurePassword ? Icons.visibility : Icons.visibility_off,
+                                obscurePassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off,
                                 color: Colors.grey,
                               ),
                               onPressed: () {
@@ -373,16 +297,17 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                               elevation: 5,
                             ),
-                            child: isLoading
-                                ? const CircularProgressIndicator(color: Colors.white)
-                                : const Text(
-                              'LOGIN',
-                              style: TextStyle(color: Colors.teal),
-
-                            ),
-                            ),
+                            child:
+                                isLoading
+                                    ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                    : const Text(
+                                      'LOGIN',
+                                      style: TextStyle(color: Colors.teal),
+                                    ),
                           ),
-
+                        ),
 
                         const SizedBox(height: 20),
 
@@ -393,11 +318,13 @@ class _LoginPageState extends State<LoginPage> {
                               onPressed: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => UserRegistrationForm()),
+                                  MaterialPageRoute(
+                                    builder:
+                                        (context) => UserRegistrationForm(),
+                                  ),
                                 );
                               },
-                              child:
-                              const Text(
+                              child: const Text(
                                 'Create Account',
                                 style: TextStyle(color: Color(0xff0077b6)),
                               ),
@@ -407,8 +334,13 @@ class _LoginPageState extends State<LoginPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => MazadcoApp(ipAddress: Session.userId!),
-                                  ),                                );                              },
+                                    builder:
+                                        (context) => MazadcoApp(
+                                          ipAddress: Session.userId!,
+                                        ),
+                                  ),
+                                );
+                              },
                               child: const Text(
                                 'Loading Data',
                                 style: TextStyle(color: Colors.grey),
@@ -426,5 +358,38 @@ class _LoginPageState extends State<LoginPage> {
         ),
       ),
     );
+  }
+
+  Future<void> evaluateRisk(int userId) async {
+    Crud crud = Crud();
+
+    var result = await crud.getRequest("$linkRiskEvaluator?user_id=$userId");
+    print("Risk API response************: $result");
+
+    if (result != null && result is Map && result.isNotEmpty) {
+      setState(() {
+        // Update risk-related data
+        var riskStatus = result['risk_status'] ?? 'Unknown';
+        var riskData = {
+          'account_authenticity': result['account_authenticity'] ?? 0.0,
+          'bidding_score': result['bidding_score'] ?? 0.0,
+          'transaction_score': result['transaction_score'] ?? 0.0,
+          'delivery_score': result['delivery_score'] ?? 0.0,
+          'fraud_score': result['fraud_score'] ?? 0.0,
+          'risk_level': result['risk_status'] ?? 'Unknown',
+        };
+        var riskImagePath = _getImageForRisk(riskStatus);
+      });
+    }
+  }
+
+  String _getImageForRisk(String riskStatus) {
+    // Example mapping; you can update this logic as per the risk levels
+    if (riskStatus == 'High') {
+      return 'assets/high_risk.png';
+    } else if (riskStatus == 'Low') {
+      return 'assets/low_risk.png';
+    }
+    return 'assets/unknown_risk.png';
   }
 }
